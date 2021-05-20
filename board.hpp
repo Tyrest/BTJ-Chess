@@ -26,13 +26,18 @@ namespace std
     {
     private:
         char mailbox[8][8];
-        
+        vector<string> pawn_moves();
+        vector<string> bishop_moves();
+        vector<string> knight_moves();
+        vector<string> rook_moves();
+        vector<string> queen_moves();
+        vector<string> king_moves();
     public:
         bool turn;
         Board();
+        Board(string fen);
         void set_fen(string fen);
         void print();
-        vector<string> generate_moves();
         char result();
         void push_move();
     };

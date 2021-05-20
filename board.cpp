@@ -4,13 +4,19 @@ using namespace std;
 
 Board::Board()
 {
-    for (int i = 0; i < 64; i++)
-        mailbox[i/8][i%8] = NON;
-    (*this).set_fen(START_FEN);
+    set_fen(START_FEN);
+}
+
+Board::Board(string fen)
+{
+    set_fen(fen);
 }
 
 void Board::set_fen(string fen)
 {
+    for (int i = 0; i < 64; i++)
+        mailbox[i/8][i%8] = NON;
+        
     int row = 0;
     int col = 0;
 
@@ -38,9 +44,4 @@ void Board::print()
             cout << mailbox[i][j];
         cout << '\n';
     }
-}
-
-vector<string> Board::generate_moves()
-{
-
 }
