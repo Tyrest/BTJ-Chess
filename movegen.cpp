@@ -4,12 +4,7 @@ using namespace std;
 
 #define all(x) begin(x), end(x)
 
-map<char, vector<pair<int, int>>> MoveGen::piece_centric(Board board)
-{
-
-}
-
-vector<string> MoveGen::pawn_moves(vector<pair<int, int>> positions, Board board)
+vector<string> MoveGen::pawn_moves(vector<int> positions, Board board)
 {
     for (auto pos : positions)
     {
@@ -17,7 +12,7 @@ vector<string> MoveGen::pawn_moves(vector<pair<int, int>> positions, Board board
     }
 }
 
-vector<string> MoveGen::bishop_moves(vector<pair<int, int>> positions, Board board)
+vector<string> MoveGen::bishop_moves(vector<int> positions, Board board)
 {
     for (auto pos : positions)
     {
@@ -25,7 +20,7 @@ vector<string> MoveGen::bishop_moves(vector<pair<int, int>> positions, Board boa
     }
 }
 
-vector<string> MoveGen::knight_moves(vector<pair<int, int>> positions, Board board)
+vector<string> MoveGen::knight_moves(vector<int> positions, Board board)
 {
     for (auto pos : positions)
     {
@@ -33,7 +28,7 @@ vector<string> MoveGen::knight_moves(vector<pair<int, int>> positions, Board boa
     }
 }
 
-vector<string> MoveGen::rook_moves(vector<pair<int, int>> positions, Board board)
+vector<string> MoveGen::rook_moves(vector<int> positions, Board board)
 {
     for (auto pos : positions)
     {
@@ -41,7 +36,7 @@ vector<string> MoveGen::rook_moves(vector<pair<int, int>> positions, Board board
     }
 }
 
-vector<string> MoveGen::queen_moves(vector<pair<int, int>> positions, Board board)
+vector<string> MoveGen::queen_moves(vector<int> positions, Board board)
 {
     for (auto pos : positions)
     {
@@ -49,16 +44,31 @@ vector<string> MoveGen::queen_moves(vector<pair<int, int>> positions, Board boar
     }
 }
 
-vector<string> MoveGen::king_moves(pair<int, int> pos, Board board)
+vector<string> MoveGen::king_moves(int pos, Board board)
 {
     
+}
+
+map<char, vector<int>> MoveGen::piece_centric(Board board)
+{
+    map<char, vector<int>> positions;
+    for (int i = 0; i < 64; i++)
+    {
+        char piece = board.mailbox[i/8][i%8];
+        if (piece != NON && int(piece) > 96 != board.turn)
+        {
+            if (board.turn) positions[char(int(piece)+32)].push_back(i);
+            else positions[piece].push_back(i);
+        }
+    }
+    return positions;
 }
 
 vector<string> MoveGen::gen(Board board)
 {
     vector<string> moves;
 
-    map<char, vector<pair<int, int>>> positions = piece_centric(board);
+    map<char, vector<int>> positions = piece_centric(board);
     
     vector<string> moves_p = pawn_moves(positions['p'], board);
     vector<string> moves_b = bishop_moves(positions['b'], board);

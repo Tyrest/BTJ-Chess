@@ -24,15 +24,8 @@ namespace std
 {
     class Board
     {
-    private:
-        char mailbox[8][8];
-        vector<string> pawn_moves();
-        vector<string> bishop_moves();
-        vector<string> knight_moves();
-        vector<string> rook_moves();
-        vector<string> queen_moves();
-        vector<string> king_moves();
     public:
+        char mailbox[8][8];
         bool turn;
         Board();
         Board(string fen);
