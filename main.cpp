@@ -10,8 +10,6 @@ int main()
     Board board = Board();
     MoveGen gen;
     board.print();
-    // for (auto move : gen.gen(board))
-    //     cout << move << '\n';
     
     for (auto it : gen.piece_centric(board))
     {
@@ -20,4 +18,12 @@ int main()
             cout << pos << ' ';
         cout << '\n';
     }
+
+    map<int, vector<int>> moves = gen.gen(board);
+    for (auto it : moves)
+        for (auto to : it.second)
+            cout << it.first << " " << to << '\n';
+    cout << moves.size() << '\n';
+    for (auto move : gen.uci_moves(moves))
+        cout << move << '\n';
 }

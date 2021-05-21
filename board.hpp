@@ -25,7 +25,7 @@ namespace std
     class Board
     {
     public:
-        char mailbox[8][8];
+        char mailbox[64];
         bool turn;
         Board();
         Board(string fen);

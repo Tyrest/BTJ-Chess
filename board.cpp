@@ -15,18 +15,19 @@ Board::Board(string fen)
 void Board::set_fen(string fen)
 {
     for (int i = 0; i < 64; i++)
-        mailbox[i/8][i%8] = NON;
+        mailbox[i] = NON;
         
-    int row = 0;
-    int col = 0;
+    int index = 0;
 
     int i;
     for (i = 0; i < fen.length(); i++)
     {
-        if (fen[i] == '/') {row++; col = 0;}
-        else if (fen[i] == ' ') break;
-        else if (int(fen[i]) < 58) col += int(fen[i]) - 48;
-        else {mailbox[row][col] = fen[i]; col++;}
+        if (fen[i] != '/')
+        {
+            if (fen[i] == ' ') break;
+            else if (int(fen[i]) < 58) index += int(fen[i]) - 48;
+            else {mailbox[index] = fen[i]; index++;}
+        }
     }
     // if turn is true, it is white's move
     if (fen[i+1] == 'w') turn = true;
@@ -38,10 +39,10 @@ void Board::set_fen(string fen)
 
 void Board::print()
 {
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 64; i++)
     {
-        for (int j = 0; j < 8; j++)
-            cout << mailbox[i][j];
-        cout << '\n';
+        cout << mailbox[i];
+        if ((i+1) % 8 == 0)
+            cout << '\n';
     }
 }
