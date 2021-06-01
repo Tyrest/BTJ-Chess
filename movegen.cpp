@@ -20,52 +20,56 @@ const unsigned char KNIGHT_LEGAL[64] =
     80, 208, 240, 240, 240, 240, 224, 160
 };
 
-map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, Board board)
-{
-    for (auto pos : positions)
-    {
+// 11010000
 
-    }
-}
+// map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, Board board)
+// {
+//     for (auto pos : positions)
+//     {
 
-map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, Board board)
-{
-    for (auto pos : positions)
-    {
+//     }
+// }
+
+// map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, Board board)
+// {
+//     map<int, vector<int>> moves;
+//     for (auto pos : positions)
+//     {
         
-    }
-}
+//     }
+// }
 
 map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, Board board)
 {
     map<int, vector<int>> moves;
     for (auto pos : positions)
         for (int i = 0; i < 8; i++)
-            if ((KNIGHT_LEGAL[pos] & ( 1 << 8-i )) >> 8-i)
+            // Need a way to check if your piece is there
+            if ((KNIGHT_LEGAL[pos] & ( 1 << 7-i )) >> 7-i)
                 moves[pos].push_back(pos+KNIGHT_OFFSETS[i]);
     return moves;
 }
 
-map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, Board board)
-{
-    for (auto pos : positions)
-    {
+// map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, Board board)
+// {
+//     for (auto pos : positions)
+//     {
         
-    }
-}
+//     }
+// }
 
-map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, Board board)
-{
-    for (auto pos : positions)
-    {
+// map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, Board board)
+// {
+//     for (auto pos : positions)
+//     {
         
-    }
-}
+//     }
+// }
 
-map<int, vector<int>> MoveGen::king_moves(int pos, Board board)
-{
+// map<int, vector<int>> MoveGen::king_moves(int pos, Board board)
+// {
     
-}
+// }
 
 string MoveGen::pos_to_uci(int from, int to)
 {
