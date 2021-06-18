@@ -20,9 +20,19 @@ const unsigned char KNIGHT_LEGAL[64] =
     80, 208, 240, 240, 240, 240, 224, 160
 };
 
-// 11010000
+const bool BOARD_EDGE[64] =
+{
+    1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1
+};
 
-// map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, Board board)
+// map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
 // {
 //     for (auto pos : positions)
 //     {
@@ -30,27 +40,56 @@ const unsigned char KNIGHT_LEGAL[64] =
 //     }
 // }
 
-// map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, Board board)
+// map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
 // {
-//     map<int, vector<int>> moves;
 //     for (auto pos : positions)
 //     {
         
 //     }
 // }
 
-map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, Board board)
+map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
     map<int, vector<int>> moves;
     for (auto pos : positions)
         for (int i = 0; i < 8; i++)
-            // Need a way to check if your piece is there
-            if ((KNIGHT_LEGAL[pos] & ( 1 << 7-i )) >> 7-i)
+            if (((KNIGHT_LEGAL[pos] & ( 1 << 8-i )) >> 8-i) && !ally.count(pos+KNIGHT_OFFSETS[i]))
                 moves[pos].push_back(pos+KNIGHT_OFFSETS[i]);
     return moves;
 }
 
-// map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, Board board)
+map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
+{
+    for (auto pos : positions)
+    {
+        map<int, vector<int>> moves;
+        for (auto pos : positions)
+        {
+            for (auto offset : ROOK_OFFSETS)
+            {
+                int cpos = pos;
+                bool collision = false;
+                cpos += offset;
+                while (!(BOARD_EDGE[cpos] && BOARD_EDGE[cpos+offset]) && !collision)
+                {
+                    if (ally.count(cpos))
+                        collision = true;
+                    else if (enemy.count(cpos))
+                    {
+                        moves[pos].push_back(cpos);
+                        collision = true;
+                    }
+
+                    moves[pos].push_back(cpos);
+                    cpos += offset;
+                }
+            }
+        }
+        return moves;
+    }
+}
+
+// map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
 // {
 //     for (auto pos : positions)
 //     {
@@ -58,15 +97,7 @@ map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, Board board)
 //     }
 // }
 
-// map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, Board board)
-// {
-//     for (auto pos : positions)
-//     {
-        
-//     }
-// }
-
-// map<int, vector<int>> MoveGen::king_moves(int pos, Board board)
+// map<int, vector<int>> MoveGen::king_moves(int pos, vector<int> ally, vector<int> enemy)
 // {
     
 // }
@@ -81,30 +112,58 @@ string MoveGen::pos_to_uci(int from, int to)
     return uci;
 }
 
-map<char, vector<int>> MoveGen::piece_centric(Board board)
+map<char, vector<int>> MoveGen::piece_centric(Board board, bool turn)
 {
     map<char, vector<int>> positions;
     for (int i = 0; i < 64; i++)
     {
         char piece = board.mailbox[i];
-        if (piece != NON && int(piece) > 96 != board.turn)
+        if (piece != NON && int(piece) > 96 != turn)
         {
-            if (board.turn) positions[char(int(piece)+32)].push_back(i);
+            if (turn) positions[char(int(piece)+32)].push_back(i);
             else positions[piece].push_back(i);
         }
     }
     return positions;
 }
 
+/*
+Generates two lists of vectors that reveal the ally and enemy
+positions on the board for quick access during move generation
+
+First vector is a list of all the ally positions on the board,
+second is a list of all the enemy positions on the board
+*/
+pair<unordered_set<int>, unordered_set<int>> MoveGen::ally_enemy(Board board, bool turn)
+{
+    unordered_set<int> ally, enemy;
+    for (int i = 0; i < 64; i++)
+    {
+        char piece = board.mailbox[i];
+        if (piece != NON)
+        {
+            if (int(piece) > 96 != turn)
+                ally.insert(i);
+            else
+                enemy.insert(i);
+            
+        }
+    }
+    return make_pair(ally, enemy);
+}
+
 map<int, vector<int>> MoveGen::gen(Board board)
 {
     map<int, vector<int>> moves;
 
-    map<char, vector<int>> positions = piece_centric(board);
+    map<char, vector<int>> positions = piece_centric(board, !board.turn);
+    unordered_set<int> ally, enemy;
+
+    tie(ally, enemy) = ally_enemy(board, !board.turn);
     
     // moves.insert(all(pawn_moves(positions['p'], board)));
     // moves.insert(all(bishop_moves(positions['b'], board)));
-    map<int, vector<int>> n_moves = knight_moves(positions['n'], board);
+    map<int, vector<int>> n_moves = knight_moves(positions['n'], ally, enemy);
     moves.insert(all(n_moves));
     // moves.insert(all(rook_moves(positions['r'], board)));
     // moves.insert(all(queen_moves(positions['q'], board)));

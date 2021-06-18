@@ -11,7 +11,7 @@ int main()
     MoveGen gen;
     board.print();
     
-    for (auto it : gen.piece_centric(board))
+    for (auto it : gen.piece_centric(board, board.turn))
     {
         cout << it.first << '\n';
         for (auto pos : it.second)
@@ -23,7 +23,6 @@ int main()
     for (auto it : moves)
         for (auto to : it.second)
             cout << it.first << " " << to << '\n';
-    cout << moves.size() << '\n';
     for (auto move : gen.uci_moves(moves))
         cout << move << '\n';
 }
