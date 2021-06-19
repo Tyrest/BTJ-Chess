@@ -4,8 +4,9 @@ using namespace std;
 
 #define all(x) begin(x), end(x)
 
-const int ROOK_OFFSETS[4] = {-8, -1, 1, 8};
 const int BISHOP_OFFSETS[4] = {-9, -7, 7, 9};
+const int ROOK_OFFSETS[4] = {-8, -1, 1, 8};
+const int QUEEN_OFFSETS[8] = {-9, -8, -7, -1, 1, 7, 8, 9};
 const int KNIGHT_OFFSETS[8] = {-17, -15, -10, -6, 6, 10, 15, 17};
 // Idea is computing the spaces the knight can jump to in constant time
 const unsigned char KNIGHT_LEGAL[64] =
@@ -22,14 +23,14 @@ const unsigned char KNIGHT_LEGAL[64] =
 
 const bool BOARD_EDGE[64] =
 {
-    1, 1, 1, 1, 1, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1
+    1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 1
 };
 
 // map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
@@ -40,13 +41,39 @@ const bool BOARD_EDGE[64] =
 //     }
 // }
 
-// map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
-// {
-//     for (auto pos : positions)
-//     {
-        
-//     }
-// }
+map<int, vector<int>> MoveGen::sliding_pieces(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy,
+                                              const int *offsets, size_t offsets_size)
+{
+    map<int, vector<int>> moves;
+    for (auto pos : positions)
+    {
+        for (int i = 0; i < offsets_size; i++)
+        {
+            int offset = offsets[i];
+            int cpos = pos;
+            bool collision = false;
+            while (!(BOARD_EDGE[cpos] && BOARD_EDGE[cpos+offset]) && !collision &&
+                    cpos+offset >= 0 && cpos+offset < 64)
+            {
+                cpos += offset;
+                if (ally.count(cpos))
+                    collision = true;
+                else
+                {
+                    moves[pos].push_back(cpos);
+                    if (enemy.count(cpos))
+                        collision = true;
+                }
+            }
+        }
+    }
+    return moves;
+}
+
+map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
+{
+    return sliding_pieces(positions, ally, enemy, BISHOP_OFFSETS, 4);
+}
 
 map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
@@ -60,42 +87,13 @@ map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, unordered_set
 
 map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
-    for (auto pos : positions)
-    {
-        map<int, vector<int>> moves;
-        for (auto pos : positions)
-        {
-            for (auto offset : ROOK_OFFSETS)
-            {
-                int cpos = pos;
-                bool collision = false;
-                cpos += offset;
-                while (!(BOARD_EDGE[cpos] && BOARD_EDGE[cpos+offset]) && !collision)
-                {
-                    if (ally.count(cpos))
-                        collision = true;
-                    else if (enemy.count(cpos))
-                    {
-                        moves[pos].push_back(cpos);
-                        collision = true;
-                    }
-
-                    moves[pos].push_back(cpos);
-                    cpos += offset;
-                }
-            }
-        }
-        return moves;
-    }
+    return sliding_pieces(positions, ally, enemy, ROOK_OFFSETS, 4);
 }
 
-// map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, vector<int> ally, vector<int> enemy)
-// {
-//     for (auto pos : positions)
-//     {
-        
-//     }
-// }
+map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
+{
+    return sliding_pieces(positions, ally, enemy, QUEEN_OFFSETS, 8);
+}
 
 // map<int, vector<int>> MoveGen::king_moves(int pos, vector<int> ally, vector<int> enemy)
 // {
@@ -162,12 +160,16 @@ map<int, vector<int>> MoveGen::gen(Board board)
     tie(ally, enemy) = ally_enemy(board, !board.turn);
     
     // moves.insert(all(pawn_moves(positions['p'], board)));
-    // moves.insert(all(bishop_moves(positions['b'], board)));
+    map<int, vector<int>> b_moves = bishop_moves(positions['b'], ally, enemy);
     map<int, vector<int>> n_moves = knight_moves(positions['n'], ally, enemy);
-    moves.insert(all(n_moves));
-    // moves.insert(all(rook_moves(positions['r'], board)));
-    // moves.insert(all(queen_moves(positions['q'], board)));
+    map<int, vector<int>> r_moves = rook_moves(positions['r'], ally, enemy);
+    map<int, vector<int>> q_moves = queen_moves(positions['q'], ally, enemy);
     // moves.insert(all(king_moves(positions['k'][0], board)));
+
+    moves.insert(all(b_moves));
+    moves.insert(all(n_moves));
+    moves.insert(all(r_moves));
+    moves.insert(all(q_moves));
 
     // vector<string> uci_moves = convert_to_uci(moves);
 

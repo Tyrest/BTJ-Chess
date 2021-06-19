@@ -8,6 +8,7 @@ using namespace std;
 int main()
 {
     Board board = Board();
+    board.set_fen("rnbqkbnr/pppppppp/8/3q4/4Q3/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     MoveGen gen;
     board.print();
     

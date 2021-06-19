@@ -19,6 +19,8 @@ namespace std
         map<int, vector<int>> knight_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
         map<int, vector<int>> rook_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
         map<int, vector<int>> queen_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
+        map<int, vector<int>> sliding_pieces(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy,
+                                             const int *offsets, size_t offsets_size);
         pair<unordered_set<int>, unordered_set<int>> ally_enemy(Board board, bool turn);
         map<int, vector<int>> king_moves(int pos, unordered_set<int> ally, unordered_set<int> enemy);
         string pos_to_uci(int from, int to);
