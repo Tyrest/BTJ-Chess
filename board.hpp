@@ -26,7 +26,8 @@ namespace std
     {
     public:
         char mailbox[64];
-        bool turn;
+        bool turn; // White is true
+        int enpassant;
         Board();
         Board(string fen);
         void set_fen(string fen);
