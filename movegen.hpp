@@ -45,6 +45,8 @@ namespace std
 
         // by switching the ally and enemy sets, the danger squares can be identified
         unordered_set<int> pawn_attack(vector<int> positions);
+        unordered_set<int> check_pins(Board board, int king);
+        bool king_danger(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy);
 
         map<int, vector<int>> pawn_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy, bool turn);
         map<int, vector<int>> bishop_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);

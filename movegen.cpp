@@ -4,8 +4,6 @@ using namespace std;
 
 #define all(x) begin(x), end(x)
 
-
-
 unordered_set<int> pawn_attack(vector<int> positions, bool turn)
 {
     unordered_set<int> moves;
@@ -22,6 +20,24 @@ unordered_set<int> pawn_attack(vector<int> positions, bool turn)
             moves.insert(pos+8*dir+1);
     }
     return moves;
+}
+
+unordered_set<int> check_pins(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy)
+{
+    unordered_set<int> pinned;
+    for (auto offset : QUEEN_OFFSETS)
+    {
+        int cpos = king;
+        bool collision = false;
+        while (!(BOARD_EDGE[cpos] && BOARD_EDGE[cpos+offset]) && !collision &&
+                cpos+offset >= 0 && cpos+offset < 64)
+        {
+            cpos += offset;
+            if (ally.count(cpos))
+                collision = true;
+        }
+    }
+    return pinned;
 }
 
 // Doesn't deal with promotions yet so have to encode that somehow
@@ -47,14 +63,14 @@ map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, unordered_set<i
         // If the pawn is still on the home row
         if (pos > low && pos <= high)
             if (!ally.count(pos+16*dir) && !enemy.count(pos+16*dir) &&
-                !ally.count(pos+8*dir) && !enemy.count(pos+8*dir))
+                    !ally.count(pos+8*dir) && !enemy.count(pos+8*dir))
                 moves[pos].push_back(pos+16*dir);
-        
+
         // Not on the left side of the board
         if (pos % 8)
             if (enemy.count(pos+8*dir-1))
                 moves[pos].push_back(pos+8*dir-1);
-        
+
         // Not on the right side of the board
         if (!(pos % 8 == 7))
             if (enemy.count(pos+8*dir+1))
@@ -67,7 +83,7 @@ map<int, vector<int>> MoveGen::pawn_moves(vector<int> positions, unordered_set<i
 }
 
 map<int, vector<int>> MoveGen::sliding_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy,
-                                              const int *offsets, size_t offsets_size)
+        const int *offsets, size_t offsets_size)
 {
     map<int, vector<int>> moves;
     for (auto pos : positions)
@@ -125,8 +141,8 @@ map<int, vector<int>> MoveGen::king_moves(int pos, unordered_set<int> ally, unor
     map<int, vector<int>> moves;
     for (auto offset : QUEEN_OFFSETS)
         if (!(BOARD_EDGE[pos] && BOARD_EDGE[pos+offset]) &&
-            (pos+offset >= 0 && pos+offset < 64) &&
-            !ally.count(pos+offset) && !danger.count(pos+offset))
+                (pos+offset >= 0 && pos+offset < 64) &&
+                !ally.count(pos+offset) && !danger.count(pos+offset))
             moves[pos].push_back(pos+offset);
     return moves;
 }
@@ -157,12 +173,12 @@ map<char, vector<int>> MoveGen::piece_centric(Board board, bool turn)
 }
 
 /*
-Generates two lists of vectors that reveal the ally and enemy
-positions on the board for quick access during move generation
+   Generates two lists of vectors that reveal the ally and enemy
+   positions on the board for quick access during move generation
 
-First set is a list of all the ally positions on the board,
-second is a list of all the enemy positions on the board
-*/
+   First set is a list of all the ally positions on the board,
+   second is a list of all the enemy positions on the board
+   */
 pair<unordered_set<int>, unordered_set<int>> MoveGen::ally_enemy(Board board, bool turn)
 {
     unordered_set<int> ally, enemy;
@@ -175,7 +191,7 @@ pair<unordered_set<int>, unordered_set<int>> MoveGen::ally_enemy(Board board, bo
                 ally.insert(i);
             else
                 enemy.insert(i);
-            
+
         }
     }
     return make_pair(ally, enemy);
@@ -209,7 +225,9 @@ map<int, vector<int>> MoveGen::gen(Board board)
     // To do:
     // Check for check and how to get out of it (or checkmate)
     // Check for pins and put them in a list
-    
+    // If moving a piece in the pins set, run the king_danger method
+    unordered_set<int> pins = check_pins(board, positions['k'][0]);
+
     map<int, vector<int>> p_moves = pawn_moves(positions['p'], ally, enemy, board.turn);
     map<int, vector<int>> b_moves = bishop_moves(positions['b'], ally, enemy);
     map<int, vector<int>> n_moves = knight_moves(positions['n'], ally, enemy);
