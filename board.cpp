@@ -1,4 +1,4 @@
-#include "board.hpp"
+#include "board.h"
 
 using namespace std;
 
@@ -19,7 +19,7 @@ void Board::set_fen(string fen)
         
     int index = 0;
 
-    int i;
+    size_t i;
     for (i = 0; i < fen.length(); i++)
     {
         if (fen[i] != '/')

@@ -7,7 +7,7 @@
 #include <map>
 #include <unordered_set>
 
-#include "board.hpp"
+#include "board.h"
 
 namespace std
 {
@@ -44,19 +44,19 @@ namespace std
         };
 
         // by switching the ally and enemy sets, the danger squares can be identified
-        unordered_set<int> pawn_attack(vector<int> positions);
-        unordered_set<int> check_pins(Board board, int king);
+        unordered_set<int> pawn_attack(vector<int> positions, bool turn);
+        unordered_set<int> check_pins(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy);
         bool king_danger(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy);
 
         map<int, vector<int>> pawn_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy, bool turn);
         map<int, vector<int>> bishop_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
-        map<int, vector<int>> knight_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
+        map<int, vector<int>> knight_moves(vector<int> positions, unordered_set<int> ally);
         map<int, vector<int>> rook_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
         map<int, vector<int>> queen_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy);
         map<int, vector<int>> sliding_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy,
                                              const int *offsets, size_t offsets_size);
         pair<unordered_set<int>, unordered_set<int>> ally_enemy(Board board, bool turn);
-        map<int, vector<int>> king_moves(int pos, unordered_set<int> ally, unordered_set<int> enemy, unordered_set<int> danger={});
+        map<int, vector<int>> king_moves(int pos, unordered_set<int> ally, unordered_set<int> danger={});
         string pos_to_uci(int from, int to);
     public:
         map<char, vector<int>> piece_centric(Board board, bool turn);
