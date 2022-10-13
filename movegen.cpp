@@ -24,44 +24,44 @@ unordered_set<int> MoveGen::pawn_attack(vector<int> positions, bool turn)
     return moves;
 }
 
-unordered_set<int> MoveGen::check_pins(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy)
+vector<pair<int, int>> MoveGen::check_pins(Board board, int king, unordered_set<int> ally, unordered_set<int> enemy)
 {
-    unordered_set<int> pinned;
+    vector<pair<int, int>> pinned;
     for (auto offset : BISHOP_OFFSETS)
     {
         int pos = king + offset;
-        while (pos >= 0 && pos < 64 && !BOARD_EDGE[pos] &&
+        while (pos >= 0 && pos < 64 && !is_edge(pos) &&
                board.mailbox[pos] == NON)
             pos += offset;
 
-        if (pos >= 0 && pos < 64 && !BOARD_EDGE[pos] &&
+        if (pos >= 0 && pos < 64 && !is_edge(pos) &&
             ally.find(pos) != ally.end())
         {
             int pos2 = pos + offset;
-            while (pos2 >= 0 && pos2 < 64 && !BOARD_EDGE[pos] && board.mailbox[pos2] == NON)
+            while (pos2 >= 0 && pos2 < 64 && !is_edge(pos) && board.mailbox[pos2] == NON)
                 pos2 += offset;
             if (pos2 >= 0 && pos2 < 64 && enemy.find(pos2) != enemy.end())
                 if (tolower(board.mailbox[pos2]) == B_B || tolower(board.mailbox[pos2]) == B_Q)
-                    pinned.insert(pos);
+                    pinned.push_back(make_pair(pos, abs(offset)));
         }
     }
 
     for (auto offset : ROOK_OFFSETS)
     {
         int pos = king + offset;
-        while (pos >= 0 && pos < 64 && !BOARD_EDGE[pos] &&
+        while (pos >= 0 && pos < 64 && !is_edge(pos) &&
                board.mailbox[pos] == NON)
             pos += offset;
 
-        if (pos >= 0 && pos < 64 && !BOARD_EDGE[pos] &&
+        if (pos >= 0 && pos < 64 && !is_edge(pos) &&
             ally.find(pos) != ally.end())
         {
             int pos2 = pos + offset;
-            while (pos2 >= 0 && pos2 < 64 && !BOARD_EDGE[pos] && board.mailbox[pos2] == NON)
+            while (pos2 >= 0 && pos2 < 64 && !is_edge(pos) && board.mailbox[pos2] == NON)
                 pos2 += offset;
             if (pos2 >= 0 && pos2 < 64 && enemy.find(pos2) != enemy.end())
                 if (tolower(board.mailbox[pos2]) == B_R || tolower(board.mailbox[pos2]) == B_Q)
-                    pinned.insert(pos);
+                    pinned.push_back(make_pair(pos, abs(offset)));
         }
     }
 
@@ -121,7 +121,7 @@ map<int, vector<int>> MoveGen::sliding_moves(vector<int> positions, unordered_se
             int offset = offsets[i];
             int cpos = pos;
             bool collision = false;
-            while (!(BOARD_EDGE[cpos] && BOARD_EDGE[cpos + offset]) && !collision &&
+            while (!(is_edge(cpos) && is_edge(cpos + offset)) && !collision &&
                    cpos + offset >= 0 && cpos + offset < 64)
             {
                 cpos += offset;
@@ -141,37 +141,42 @@ map<int, vector<int>> MoveGen::sliding_moves(vector<int> positions, unordered_se
 
 map<int, vector<int>> MoveGen::bishop_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
-    return sliding_moves(positions, ally, enemy, BISHOP_OFFSETS, 4);
+    int offsets[4] = BISHOP_OFFSETS;
+    return sliding_moves(positions, ally, enemy, offsets, 4);
 }
 
 map<int, vector<int>> MoveGen::knight_moves(vector<int> positions, unordered_set<int> ally)
 {
+    int offsets[8] = KNIGHT_OFFSETS;
     map<int, vector<int>> moves;
     for (auto pos : positions)
         for (int i = 0; i < 8; i++)
             // WTF does this even mean?
-            if (((KNIGHT_LEGAL[pos] & (1 << (7 - i))) >> (7 - i)) && !ally.count(pos + KNIGHT_OFFSETS[i]))
-                moves[pos].push_back(pos + KNIGHT_OFFSETS[i]);
+            if (((KNIGHT_LEGAL[pos] & (1 << (7 - i))) >> (7 - i)) && !ally.count(pos + offsets[i]))
+                moves[pos].push_back(pos + offsets[i]);
     return moves;
 }
 
 map<int, vector<int>> MoveGen::rook_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
-    return sliding_moves(positions, ally, enemy, ROOK_OFFSETS, 4);
+    int offsets[4] = ROOK_OFFSETS;
+    return sliding_moves(positions, ally, enemy, offsets, 4);
 }
 
 map<int, vector<int>> MoveGen::queen_moves(vector<int> positions, unordered_set<int> ally, unordered_set<int> enemy)
 {
-    return sliding_moves(positions, ally, enemy, QUEEN_OFFSETS, 8);
+    int offsets[8] = QUEEN_OFFSETS;
+    return sliding_moves(positions, ally, enemy, offsets, 8);
 }
 
 map<int, vector<int>> MoveGen::king_moves(int pos, unordered_set<int> ally, unordered_set<int> danger /*= {}*/)
 {
     map<int, vector<int>> moves;
     for (auto offset : QUEEN_OFFSETS)
-        if (!(BOARD_EDGE[pos] && BOARD_EDGE[pos + offset]) &&
-            (pos + offset >= 0 && pos + offset < 64) &&
-            !ally.count(pos + offset) && !danger.count(pos + offset))
+        if ((pos + offset >= 0 && pos + offset < 64) &&
+            !(is_edge(pos) && is_edge(pos + offset)) &&
+            ally.find(pos + offset) == ally.end() &&
+            danger.find(pos + offset) == danger.end())
             moves[pos].push_back(pos + offset);
     return moves;
 }
@@ -184,6 +189,13 @@ string MoveGen::pos_to_uci(int from, int to)
     uci += char(97 + to % 8);
     uci += char(56 - to / 8);
     return uci;
+}
+
+pair<int, int> MoveGen::uci_to_pos(string uci)
+{
+    int from = (56 - uci[1]) * 8 + uci[0] - 97;
+    int to = (56 - uci[3]) * 8 + uci[2] - 97;
+    return make_pair(from, to);
 }
 
 map<char, vector<int>> MoveGen::piece_centric(Board board, bool turn)
@@ -239,11 +251,11 @@ map<int, vector<int>> MoveGen::gen(Board board)
 
     unordered_set<int> danger = pawn_attack(positions['p'], board.turn);
     vector<map<int, vector<int>>> attacks;
-    attacks.push_back(bishop_moves(positions['b'], ally, enemy));
-    attacks.push_back(knight_moves(positions['n'], ally));
-    attacks.push_back(rook_moves(positions['r'], ally, enemy));
-    attacks.push_back(queen_moves(positions['q'], ally, enemy));
-    attacks.push_back(king_moves(positions['k'][0], ally)); // No danger squares
+    attacks.push_back(bishop_moves(positions['b'], enemy, ally));
+    attacks.push_back(knight_moves(positions['n'], enemy));
+    attacks.push_back(rook_moves(positions['r'], enemy, ally));
+    attacks.push_back(queen_moves(positions['q'], enemy, ally));
+    attacks.push_back(king_moves(positions['k'][0], enemy)); // No danger squares
     for (auto attack : attacks)
         for (auto piece : attack)
             for (auto move : piece.second)
@@ -256,7 +268,7 @@ map<int, vector<int>> MoveGen::gen(Board board)
     // Check for check and how to get out of it (or checkmate)
     // Check for pins and put them in a list
     // If moving a piece in the pins set, run the king_danger method
-    unordered_set<int> pins = check_pins(board, positions['k'][0], ally, enemy);
+    vector<pair<int, int>> pins = check_pins(board, positions['k'][0], ally, enemy);
 
     map<int, vector<int>> p_moves = pawn_moves(positions['p'], ally, enemy, board.turn);
     map<int, vector<int>> b_moves = bishop_moves(positions['b'], ally, enemy);
@@ -271,6 +283,13 @@ map<int, vector<int>> MoveGen::gen(Board board)
     moves.insert(all(r_moves));
     moves.insert(all(q_moves));
     moves.insert(all(k_moves));
+
+    for (auto pin : pins)
+        for (vector<int>::iterator it = moves[pin.first].begin(); it != moves[pin.first].end();)
+            if ((*it - pin.first) % pin.second)
+                it = moves[pin.first].erase(it);
+            else
+                ++it;
 
     return moves;
 }

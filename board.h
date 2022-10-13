@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #define B_K   'k'
@@ -33,7 +34,8 @@ namespace std
         void set_fen(string fen);
         void print();
         char result();
-        void push_move();
+        void push_move(int from, int to);
+        void render_htmml(string outfile);
     };
 }
 
